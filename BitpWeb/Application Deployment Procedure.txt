@@ -1,0 +1,17 @@
+Deployment procedure of Project ()
+==================================
+Process:-
+	This is a client server based android application. There will be a server application named as "BitpWeb" which provides the services and data to the android application.So, first prepare the server environment(installation of tomcat and postgresql), then put the web project in tomcat and database in postgres. Then get the ip and port address of the server machine. Create the android application "Bitp" with the configured ip and port and generate the apk then install.
+
+N.B:- For testing as we are not using any public IP address which can be accessible in internet, so we need to keep the server machine and the android devices in same local network(Ex. using hotspot).
+
+Step 1 - In server computer install PostgreSql and create a database with name bitp. Restore the backup file into this database.
+
+Step 2 - In server computer(or machine) run the tomcat and deploy the BitpWeb application.
+
+Step 3 - Get the ip address (or domain name ex. 192.168.0.12) and port address(ex. 8080) of the above server machine.
+
+Step 4 - Build the android apk with this ip (or domain) and port (by changing the ip and port in host_details table in Databasehelper.java).
+
+
+=========================== Thankx=============================

@@ -1,0 +1,334 @@
+Biotech Industrial Training Program app analysis:-
+Date: 17-Mar-2017 logged by Ranavir Dash
+==================================================
+Department of Biotechnology is supporting Biotech Industrial Training Programme(BITP) for providing industrial traing of six months to fresh B.E/B.Tech/M.Sc/M.Tech students in biotechnolgy. It has below described 12 steps.
+
+I - An android app to manage BITP(Biotech Industrial Training Program)
+Desc:- 
+- There will be two types of users(admin, student)
+
+II - A web portal for giving online exam and creating online examination mostly
+
+III - Required web services to server android application requests
+
+Basic analysis of Problem statement point wise:-
+===================================================
+Common functionality:-
+---------------------
+- Student and Admin registration :- Registration from android app and provided an ID and can login in android app with respective permissions
+- notification lifecycle :- new/processed/
+
+1 - BITP notification & eligibility criteria(Notification Activity which is default) - Both Admin and Student - nav bar menu
+Desc:-
+	Admin
+	-----
+	- can see the new notifications along with (view more button to see the details of eligibility criteria and last date etc.) and (see applications for checking the applied details to this notification)
+	- can add new notification with Company requirements(present in step 5) along with eligibility criteria by creating one notification id
+	Student
+	-------
+	- can see the new notifications along with (view more button to see the details of eligibility criteria and last date etc.) and (apply now button for applying)
+	
+2 - Processing of applications(Applications Activity) - Only Admin
+Desc:-
+	Admin(When clicking see applications in notifications)
+	-----
+	- It will show total applied count
+	- Also show stop notification button - stop the notification which will hide the notification from all others app or no one can apply further
+	- Process applications - The applied students will get a mail with an online link(studentid,exam_code) to attend the examination
+	
+3 - Online single session mcq examination - exam creation by admin and attend by student - Portal part
+Desc:-
+	Admin
+	-----
+	- can login to portal 
+	- create exam, question, options and sets the correct answer
+	- link exam code to notifiation id
+	Student
+	-------
+	- no need to login they can attend the exam from the link and their results automatically evaluated on the spot and mark saved in database automatically.
+
+4 - Interviewing applicants(Interview Activity) - Only Admin - nav bar menu
+Desc:-
+	Admin(When clicking take interview)
+	-----
+	- First it will ask for exam code and student id
+	- Then it will show student name, total interview mark and ask to enter interview marks by admin
+	
+5 - Matchmaking of companies requistions with student profiles (Matchmaking Activity)- Only Admin - nav bar menu
+Desc:-
+	Admin
+	-----
+	- ask to select notification(from processed notifications) and on selecting a notification show the details 
+	- Will display all the applied students summary to this company/notification.(How many applied(total), How many selected(accepted), How many rejected)
+	- Search by ID and see its exam profile for this notification(Can manually make selected or rejected by pressing corresponding button)
+	
+6 - Placement of selected candidates in companies for training(Traning Activity) - Both Admin and student- nav bar menu
+Desc:-
+	Admin(create new, add trainees)
+	-----
+	Create Training
+	---------------
+	- Select notification(processed and no training linked) for this company( Then show create training)
+	- create training(by selecting name for a company , start date, end date etc.), along with that the capacity to hold 6 feedbacks month wise and 6 stipens month wise for each trainee.
+		Add Students
+		------------
+		- Add students from notication results (Select notifications for this company and add press [add all the selected students] for this training)
+		- Add students by student id( Enter a student id to put under this training )
+	Student
+	-------
+	- Select company(added by admin portal)
+	- Select notification for this training
+	- Can see its own training details(show all training records of this student available with this company along with feedbacks, project status and stipen status mont wise and total received amount)
+*************************************************************************************************************************
+7 - Monthly feedback and evaluation of about 900 students(Feedback Activity) - Only Students - nav bar menu
+	Student(onclick of feedback in Traing Activity)
+	-----
+	- select a training from involved ongoing trainings
+	- select feedback month(selecting from 01 - 06 from a dropdown)
+	- Can give feedback against this month
+*************************************************************************************************************************
+8 - Disbursement of trainee stipend/company bench fee(Stipen Activity) - Only Admin - nav bar menu
+	Admin
+	-----
+	- select a training among ongoing trainings
+	- select stipen month(selecting from 01 - 06 from a dropdown)
+	- click pay stipens to All
+	- Pay stipens to the students linked to this training
+	
+9 - Monitoring :- It is included in all parts
+
+10 - Submission of project report(ProjectReport Activity) - Only Admin - nav bar menu
+	Admin
+	-----
+	- Select ongoing training
+	- Ask for student id
+	- Select Submitted Project Report or Cancel Project Report
+	
+11 - Issue of certificate(IssueCertificate Activity) - Only Admin - nav bar menu
+	Admin
+	-----
+	- Select a training which is completed
+	- Ask for student id
+	- Click Issue Certificate - Will issue pdf certificates to the trainee's mail id
+	
+12 - Follow up regarding placement(Placement Activity) - Both Admin and students - nav bar menu
+	Admin
+	-----
+	- Create placement message.
+	- Stop placement message.
+	Student
+	-------
+	- Students can see the placement messages set by admin Company wise
+	
+Extra for Students
+------------------
+- View profile and update profile
+- When apply to a notification two options available(update profile then apply / apply with existing profile)
+
+===========================================================================================================
+Database Design:-
+Date: 17-Mar-2017 logged by Ranavir Dash
+===========================================================================================================
+Table designs for Online Exam, Notification, Training etc.
+-----------------------------------------------------------
+1 - company_master
+------------------
+slno
+comp_code - ( ex - tcs)- UK
+comp_name
+
+2 - bitp_notification
+------------------------
+slno
+notification_id - ( ex - N01/N02) - UK
+comp_code - FK company_master comp_code
+notification text
+hsc_percentage
+intrm_percentage
+grad_percentage
+pg_percentage
+created_on
+created_by
+updated_on
+updated_by
+
+3 - bitp_exam
+--------------
+slno
+exam_code( ex - tcsexam012354894) - UK
+notification_id - FK bitp_notification notification_id
+exam_title
+exam_desc
+exam_welcometext
+exam_endtext
+active character varying(1)
+startdate timestamp without time zone
+expires timestamp without time zone
+marks_exam_total
+marks_interview_total
+marks_total_cutoff
+time_total double
+created_on
+created_by
+updated_on
+updated_by
+
+4 - bitp_exam_results
+---------------------
+slno
+exam_code - UK and FK bitp_exam exam_code
+user_id - FK bitp_user user_id
+start_time timestamp without time zone
+end_time timestamp without time zone
+student_session_id text - UK
+marks_exam_acquired
+marks_interview_acquired
+selection_status- S(selected)/R(Rejected)/P(Pending default)
+
+5 - bitp_questions
+------------------
+qid serial NOT NULL, - PK
+exam_code text NOT NULL,
+type character varying(1) NOT NULL
+question text NOT NULL,
+question_order integer NOT NULL
+answer_code character varying(5) - FK bitp_options code
+weightage_marks
+
+6 - bitp_options
+------------------
+qid integer NOT NULL DEFAULT 0, - UK
+code character varying(5) NOT NULL DEFAULT ''::character varying, - UK
+answer text NOT NULL
+
+7 - bitp_answers
+----------------
+qid - UK
+user_id - UK
+answer_code
+
+8 - bitp_training
+-------------------
+slno - PK
+training_code - (ex - tcsTRN012354894) - UK
+training_desc
+active character varying(1)
+startdate timestamp without time zone
+expires timestamp without time zone
+mth1_stipen_amt double
+mth2_stipen_amt double
+mth3_stipen_amt double
+mth4_stipen_amt double
+mth5_stipen_amt double
+mth6_stipen_amt double
+created_on
+created_by
+updated_on
+updated_by
+
+9 - bitp_trainee_details
+------------------------
+slno - PK
+training_code - FK bitp_training training_code, UK
+user_id - UK
+mth1_feedback text
+mth2_feedback text
+mth3_feedback text
+mth4_feedback text
+mth5_feedback text
+mth6_feedback text
+mth1_stipen_rcv character varying(1) default 'N'
+mth2_stipen_rcv character varying(1) default 'N'
+mth3_stipen_rcv character varying(1) default 'N'
+mth4_stipen_rcv character varying(1) default 'N'
+mth5_stipen_rcv character varying(1) default 'N'
+mth6_stipen_rcv character varying(1) default 'N'
+stipen_amt_rcv_total double
+project_submission_status character varying(1) default 'N'
+issued_certificate_status character varying(1) default 'N'
+
+10 - bitp_placement_news
+------------------------
+slno
+placement_code - (ex - bitptcsPLM01)
+comp_code
+news text
+created_on
+created_by
+updated_on
+updated_by
+
+11 - bitp_user
+---------------------
+user_id - PK 
+phnno
+email
+username - UK
+password - UK
+name
+user_type
+created_on
+created_by
+updated_on
+updated_by
+active character varying(1) default 'N'
+
+12 - bitp_user_profile
+-----------------------
+user_id - PK, FK bitp_user user_id
+gender
+dob
+name_father
+name_mother
+occupation_father
+occupation_mother
+nationality
+address
+cast(OBC/SC/ST/GEN)
+disability(Y/N)
+identification_mark text
+
+hsc_board
+percentage_hsc
+yop_hsc
+intrm_board
+percentage_intrm
+yop_intrm
+grad_board
+percentage_grad
+yop_grad
+pg_board
+percentage_pg
+yop_pg
+
+img_cert_hsc text
+img_cert_intemediate text
+img_cert_grad text
+img_cert_pg text
+img_signature text
+img_profile text
+created_on
+updated_on
+
+=====================================
+Development R&D
+=====================================
+<script>
+    $(function(){
+        setInterval(function() {
+            $.get('SomePageThatDoesNothing');
+            }, 15000);
+    });
+</script>
+--------------------------------------
+I assume this is session storage in html5, in which case you can use
+
+sessionStorage.clear();
+----------------------------------------
+$(function(){
+	$("#hm_timer").countdowntimer({
+                hours : 3‚
+		minutes : 10‚
+                size : "lg"
+	});
+});
