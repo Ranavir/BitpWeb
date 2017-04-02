@@ -51,6 +51,12 @@ public interface CommonService extends Serializable{
 	 * @author 
 	 *****************************************************************/
 	JSONArray getAvailableTraining();
+	/********************************************************************
+	 * This method gives the available trainings for a company
+	 * @param comp_code
+	 * @return
+	 *******************************************************************/
+	JSONArray getAvailableTrainingsByCompany(String comp_code);
 
 	
 	

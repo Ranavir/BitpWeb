@@ -56,5 +56,11 @@ public interface CommonDao extends Serializable{
 	 * @author 
 	 *****************************************************************/
 	List<TrainingVO> getAvailableTraining();
+	/********************************************************************
+	 * This method gives the available trainings for a company
+	 * @param comp_code
+	 * @return
+	 *******************************************************************/
+	List<TrainingVO> getAvailableTrainingsByCompany(String comp_code);
 	
 }

@@ -1,5 +1,8 @@
 
 package team.tcc.util;
+
+import java.util.Locale;
+
 /***************************************************************
  * This class holds all Project level constants
  * @author 
@@ -37,6 +40,9 @@ public class ProjectConstants {
     public static final int PAY_STIPEND  													= 71;
     public static final int SUBMIT_PROJECT													= 72;
     public static final int ISSUE_CERTIFICATE												= 73;
+    public static final int PUSH_ADMIN_FEEDBACK                              				= 74;
+    public static final int FETCH_TRAININGS_BY_COMPANY                       				= 75;
+    public static final int FETCH_TRAINING_REVIEWS                           				= 76;
     
 	//Project CODEs
 	public static final int CODE_QUERY_SUCCESS = 1 ;
@@ -118,8 +124,18 @@ public class ProjectConstants {
 	public static final String QUERY_UPDATE_ISSUE_CERT = "UPDATE bitp_trainee_details SET issue_certificate_status = 'Y' where training_code= '%s' and user_id = %s";
 	public static final String QUERY_SUBMIT_PROJECT_REPORT = "UPDATE bitp_trainee_details SET project_submission_status = 'Y' where training_code= '%s' AND user_id = %s";
 	
+	//NEW
+	public static final String QUERY_INSERT_TRAINING_FEEDBACK = "INSERT INTO bitp_student_training_feedbacks( student_id, training_code, feedback_category, feedback,  month) VALUES (%s, '%s', '%s', '%s', '%s')";
+	public static final String QUERY_GET_FEEDBACK_PROFILE1 = "SELECT  feedback_category, feedback, month, updated_on FROM bitp_student_training_feedbacks where student_id = %s and training_code = '%s'";
+	public static final String QUERY_GET_FEEDBACK_PROFILE2 = "SELECT admin_id, feedback_category, feedback, updated_on FROM bitp_admin_training_feedbacks where student_id = %s and training_code = '%s'";
+	public static final String QUERY_IS_EXIST_STUDENT_FEEDBACK = "select feedback from bitp_student_training_feedbacks where student_id = %s and training_code = '%s' and feedback_category = '%s' and month = '%s'";
+	public static final String QUERY_IS_EXIST_ADMIN_FEEDBACK = "SELECT  feedback FROM bitp_admin_training_feedbacks where student_id = %s and training_code = '%s' and feedback_category = '%s'";
+	public static final String QUERY_INSERT_ADMIN_TRAINING_FEEDBACK = "INSERT INTO bitp_admin_training_feedbacks( admin_id, student_id, training_code, feedback_category, feedback) VALUES (%s, %s, '%s', '%s', '%s')";
+	public static final String QUERY_IS_VALID_TRAINEE = "SELECT * FROM bitp_trainee_details where training_code = '%s' and user_id = %s";
+	public static final String QUERY_GET_TRAININGS_BY_COMPANY = "SELECT slno, training_code, training_desc, mth1_stipen_amt, mth2_stipen_amt, mth3_stipen_amt, mth4_stipen_amt,"+ 
+		       "mth5_stipen_amt, mth6_stipen_amt, created_on, created_by,comp_code FROM bitp_training WHERE ACTIVE = 'Y' and comp_code = '%s'";
+	public static final String QUERY_GET_TRAINING_REVIEWS = "select bu.name,bstf.feedback_category,bstf.feedback from  bitp_student_training_feedbacks bstf,bitp_user bu where bstf.student_id = bu.user_id and bstf.training_code = '%s'";
 	
-			
 	/*************************
 	 * Portal Query
 	 *************************/
@@ -133,6 +149,14 @@ public class ProjectConstants {
 			+ " from bitp_exam_results ber,bitp_user usr,bitp_exam be where usr.user_id = ber.user_id and be.exam_code = ber.exam_code and be.exam_code = '%s'";
 	
 	public static final String QUERY_UPDATE_MARK = "update bitp_exam_results set marks_exam_acquired = %s where exam_code = '%s' and user_id = %s and selection_status = 'pending'";
+	
+	
+	
+	
+	
+	
+	
+	
 	
 	
 	

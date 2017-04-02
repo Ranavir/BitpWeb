@@ -310,6 +310,63 @@ public class CommonDaoImpl implements CommonDao {
 		logger.info("EXIT---> methodname : "+methodname);
 		return alTraining;
 	}//end of getAvailableTraining
+	/********************************************************************
+	 * This method gives the available trainings for a company
+	 * @param comp_code
+	 * @return
+	 *******************************************************************/
+	@Override
+	public List<TrainingVO> getAvailableTrainingsByCompany(String comp_code) {
+		String methodname = "getAvailableTrainingsByCompany" ;
+		logger.info("ENTRY---> methodname : "+methodname);
+		
+		ArrayList<TrainingVO> alTraining =  new ArrayList<TrainingVO>() ;
+		TrainingVO voObj = null;
+		Connection con = null;
+		Statement st = null ;
+		ResultSet rs = null ;
+		/*SELECT slno, training_code, training_desc, 
+	       mth1_stipen_amt, mth2_stipen_amt, mth3_stipen_amt, mth4_stipen_amt, 
+	       mth5_stipen_amt, mth6_stipen_amt, created_on, created_by,comp_code
+	  FROM bitp_training WHERE ACTIVE = 'Y' and comp_code = '%s'*/
+		String query =  String.format(ProjectConstants.QUERY_GET_TRAININGS_BY_COMPANY, comp_code);
+		try{
+			con = ConnectionFactory.getConnection();
+			if (con != null) {
+				logger.info("query:"+query);
+				st = con.createStatement() ;
+				
+				rs = st.executeQuery(query) ;
+				while(rs.next()){//member is valid
+					voObj = new TrainingVO() ;
+					
+					voObj.setSlno(rs.getInt(1));
+					voObj.setTraining_code(rs.getString(2));
+					voObj.setTraining_desc(rs.getString(3));
+					voObj.setMth1_stipen_amt(rs.getDouble(4));
+					voObj.setMth2_stipen_amt(rs.getDouble(5));
+					voObj.setMth3_stipen_amt(rs.getDouble(6));
+					voObj.setMth4_stipen_amt(rs.getDouble(7));
+					voObj.setMth5_stipen_amt(rs.getDouble(8));
+					voObj.setMth6_stipen_amt(rs.getDouble(9));
+					voObj.setCreated_on(rs.getString(10));
+					voObj.setCreated_by(rs.getString(11));
+					voObj.setComp_code(rs.getString(12));
+					voObj.setActive("Y");
+					
+					alTraining.add(voObj) ;
+				}
+			}//end of If
+		 
+		} catch (Exception e) {
+			e.printStackTrace();
+		} finally {
+			Utils.closeDB(rs,st,con);
+		}//end of try / catch
+		//System.out.println(alModuleDtos);
+		logger.info("EXIT---> methodname : "+methodname);
+		return alTraining;
+	}//end of getAvailableTraining
 	
 	/**************************************************            Business Logic Ends              *********************************************/
 	

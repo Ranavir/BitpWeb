@@ -17,11 +17,14 @@ import team.tcc.dao.AppDao;
 import team.tcc.util.ConnectionFactory;
 import team.tcc.util.ProjectConstants;
 import team.tcc.util.Utils;
+import team.tcc.vo.AdminFeedbackVO;
 import team.tcc.vo.ApplicationVO;
+import team.tcc.vo.FeedbackVO;
 import team.tcc.vo.NotificationResultVO;
 import team.tcc.vo.ProfileVO;
 import team.tcc.vo.StudentExamProfileVO;
 import team.tcc.vo.StudentTrainingProfileVO;
+import team.tcc.vo.TrainingReviewVO;
 
 /**************************************************************
  * @author 
@@ -894,8 +897,8 @@ public class AppDaoImpl implements AppDao {
 		
 		logger.info("user id --->"+user_id+" training_code --->"+training_code);
 		Connection con = null;
-		ResultSet rs = null;
-		Statement stmt = null;
+		ResultSet rs = null, rs1 = null, rs2 = null;
+		Statement stmt  = null, stmt1 = null, stmt2 = null ;
 		StudentTrainingProfileVO profile = null;
 		
 		/*select usr.user_id,usr.name,usr.phnno,usr.email,
@@ -949,14 +952,49 @@ where  usr.user_id = td.user_id and training.training_code = td.training_code an
 				profile.setProject_submission_status(!StringUtils.isEmpty(rs.getString(26)) ? rs.getString(26).trim() : "");
 				profile.setIssue_certificate_status(!StringUtils.isEmpty(rs.getString(27)) ? rs.getString(27).trim() : "");
 				
+				//SELECT  feedback_category, feedback, month, updated_on FROM bitp_student_training_feedbacks where student_id = %s and training_code = '%s'
+				query = String.format(ProjectConstants.QUERY_GET_FEEDBACK_PROFILE1,user_id,training_code);
+				logger.info("query--->"+query);
+				stmt1 = con.createStatement();
+				rs1 = stmt1.executeQuery(query);
+				List<FeedbackVO> fvos = new ArrayList<>();
+				while (rs1.next()) {
+					FeedbackVO fvo = new FeedbackVO();
+					fvo.setTraining_code(training_code);
+					fvo.setFeedback_category(rs1.getString(1));
+					fvo.setFeedback(rs1.getString(2));
+					fvo.setStudent_id(user_id);
+					fvo.setMonth(rs1.getString(3));
+					fvo.setUpdated_on(rs1.getString(4));
+					
+					fvos.add(fvo);
+				}
+				profile.setListFeedbacks(fvos);
+				//SELECT admin_id, feedback_category, feedback, updated_on FROM bitp_admin_training_feedbacks where student_id = %s and training_code = '%s'
+				query = String.format(ProjectConstants.QUERY_GET_FEEDBACK_PROFILE2,user_id,training_code);
+				logger.info("query--->"+query);
+				stmt2 = con.createStatement();
+				rs2 = stmt1.executeQuery(query);
+				List<AdminFeedbackVO> afvos = new ArrayList<>();
+				while (rs2.next()) {
+					AdminFeedbackVO afvo = new AdminFeedbackVO();
+					afvo.setTraining_code(training_code);
+					afvo.setAdmin_id(rs2.getInt(1));
+					afvo.setFeedback_category(rs2.getString(2));
+					afvo.setFeedback(rs2.getString(3));
+					afvo.setStudent_id(user_id);
+					afvo.setUpdated_on(rs2.getString(4));
+					
+					afvos.add(afvo);
+				}
+				profile.setListAdminFeedbacks(afvos);
 			}// end if
-			stmt.close();
-			rs.close();
+			
 			
 		}catch(Exception e) {
 			e.printStackTrace();
 		}finally {
-			Utils.closeDB(stmt,rs,con);
+			Utils.closeDB(stmt2,stmt1,stmt,rs2,rs1,rs,con);
 		}//end of finally
 		logger.info("Exit--->"+this.getClass().getName()+" method---->"+methodname);
 		return profile;
@@ -969,39 +1007,71 @@ where  usr.user_id = td.user_id and training.training_code = td.training_code an
 	 * @param training_code
 	 * @param month
 	 * @param feedback
+	 * @param category 
 	 * @return
 	 * @author Amod
 	 * @date 25032017
 	 ****************************************************************************/
 	@Override
-	public boolean updateStudentTrainingFeedback(int user_id, String training_code, String month, String feedback) {
+	public boolean updateStudentTrainingFeedback(int user_id, String training_code, String month, String feedback, String category) {
 		String methodname = "updateStudentTrainingFeedback" ;
 		logger.info("ENTRY---> methodname : "+methodname);
 		
 		Connection con = null;
-		Statement stmtUpdateFeedback = null;
+		Statement stmt = null;
+		Statement stmt1 = null;
 		int uc = -1 ;
 		boolean status = false;
-		
-		/*UPDATE bitp_trainee_details SET  %s='%s' WHERE training_code = '%s' and user_id = %s*/
+		String query = "";
+		/*UPDATE bitp_trainee_details SET  %s='Given' WHERE training_code = '%s' and user_id = %s
+		 INSERT INTO bitp_student_training_feedbacks( student_id, training_code, feedback_category, feedback,  month) VALUES (%s, '%s', '%s', '%s', '%s')
+            
+         */
 		 
 		
 		
 		try {
-			String queryUpdateFeedback = String.format(ProjectConstants.QUERY_UPDATE_TRAINING_FEEDBACK,month,feedback,training_code,user_id ) ;
-			
-			logger.info("query--->"+queryUpdateFeedback);
 			con = ConnectionFactory.getConnection();
-			stmtUpdateFeedback = con.createStatement();
-			uc = stmtUpdateFeedback.executeUpdate(queryUpdateFeedback);
+			con.setAutoCommit(false);
+			query = String.format(ProjectConstants.QUERY_UPDATE_TRAINING_FEEDBACK,month,"Submitted",training_code,user_id ) ;
+			logger.info("query--->"+query);
+			stmt = con.createStatement();
+			uc = stmt.executeUpdate(query);
 			
 			if(uc >= 0){
-				status = true;
+				/*if(StringUtils.equalsIgnoreCase("mth1_feedback", month)){
+	                month = "First Month";
+	            }
+				if(StringUtils.equalsIgnoreCase("mth2_feedback", month)){
+	                month = "Second Month";
+	            }
+				if(StringUtils.equalsIgnoreCase("mth3_feedback", month)){
+	                month = "Third Month";
+	            }
+				if(StringUtils.equalsIgnoreCase("mth4_feedback", month)){
+	                month = "Fourth Month";
+	            }
+				if(StringUtils.equalsIgnoreCase("mth5_feedback", month)){
+	                month = "Fifth Month";
+	            }
+				if(StringUtils.equalsIgnoreCase("mth6_feedback", month)){
+	                month = "Sixth Month";
+	            }*/
+				query = String.format(ProjectConstants.QUERY_INSERT_TRAINING_FEEDBACK,user_id,training_code,category,feedback,month) ;
+				logger.info("query--->"+query);
+				stmt1 = con.createStatement();
+				uc = stmt1.executeUpdate(query);
+				if(uc >= 0){
+					con.commit();
+					status = true;
+				}else{
+					con.rollback();
+				}
 			}
 		}catch(Exception e) {
 			e.printStackTrace();
 		}finally {
-			Utils.closeDB(stmtUpdateFeedback,con);
+			Utils.closeDB(stmt1,stmt,con);
 		}//end of finally
 		
 		
@@ -1251,7 +1321,240 @@ where  usr.user_id = td.user_id and training.training_code = td.training_code an
 		 logger.info("EXIT---> methodname : "+methodname);
 		return status;
 	}//end of payStipend
-	
+	/**********************************************************************************
+	 * This method checks the existence of a student feedback for a particular category
+	 * in a particular training in a particular month
+	 * @param user_id
+	 * @param training_code
+	 * @param month
+	 * @param category
+	 * @return
+	 *********************************************************************************/
+	@Override
+	public boolean checkStudentFeedback(int user_id, String training_code, String month, String category) {
+		String methodname = "checkStudentFeedback" ;
+		logger.info("ENTRY---> methodname : "+methodname);
+		
+		Connection con = null;
+		Statement stmt = null;
+		ResultSet rs = null;
+		boolean status = false;
+		
+		//select feedback from bitp_student_training_feedbacks where student_id = %s and training_code = '%s' and feedback_category = '%s' and month = '%s'
+		 
+		
+		
+		try {
+			String query = String.format(ProjectConstants.QUERY_IS_EXIST_STUDENT_FEEDBACK,user_id,training_code,category,month) ;
+			
+			logger.info("query--->"+query);
+			con = ConnectionFactory.getConnection();
+			stmt = con.createStatement();
+			rs = stmt.executeQuery(query);
+			
+			if(rs.next()){
+				status = true;
+			}
+		}catch(Exception e) {
+			e.printStackTrace();
+		}finally {
+			Utils.closeDB(rs,stmt,con);
+		}//end of finally
+		
+		
+		 
+		 logger.info("EXIT---> methodname : "+methodname);
+		return status;
+	}//end of checkStudentFeedback
+	/***********************************************************************************
+	 * This method checks whether admin has given a feedback for that particular student
+	 * of this category
+	 * 
+	 * @param student_id
+	 * @param training_code
+	 * @param category
+	 * @return
+	 **********************************************************************************/
+	@Override
+	public boolean checkAdminFeedback(int student_id, String training_code, String category) {
+		String methodname = "checkAdminFeedback" ;
+		logger.info("ENTRY---> methodname : "+methodname);
+		
+		Connection con = null;
+		Statement stmt = null;
+		ResultSet rs = null;
+		boolean status = false;
+		
+		//SELECT  feedback FROM bitp_admin_training_feedbacks where student_id = %s and training_code = '%s' and feedback_category = '%s'
+		 
+		
+
+		
+		try {
+			String query = String.format(ProjectConstants.QUERY_IS_EXIST_ADMIN_FEEDBACK,student_id,training_code,category) ;
+			
+			logger.info("query--->"+query);
+			con = ConnectionFactory.getConnection();
+			stmt = con.createStatement();
+			rs = stmt.executeQuery(query);
+			
+			if(rs.next()){
+				status = true;
+			}
+		}catch(Exception e) {
+			e.printStackTrace();
+		}finally {
+			Utils.closeDB(rs,stmt,con);
+		}//end of finally
+		
+		
+		 
+		 logger.info("EXIT---> methodname : "+methodname);
+		return status;
+	}//end of checkAdminFeedback
+	/***********************************************************************************
+	 * This method used to update feedback for a student by admin/Trainer/company
+	 * for the training
+	 * 
+	 * @param student_id
+	 * @param training_code
+	 * @param feedback
+	 * @param category
+	 * @param admin_id
+	 * @return
+	 **********************************************************************************/
+	@Override
+	public boolean updateAdminTrainingFeedback(int student_id, String training_code, String feedback, String category, int admin_id) {
+		String methodname = "updateAdminTrainingFeedback" ;
+		logger.info("ENTRY---> methodname : "+methodname);
+		
+		Connection con = null;
+		Statement stmt1 = null;
+		int uc = -1 ;
+		boolean status = false;
+		String query = "";
+		/*
+            INSERT INTO bitp_admin_training_feedbacks( admin_id, student_id, training_code, feedback_category, feedback) VALUES (%s, %s, '%s', '%s', '%s');
+         */
+		 
+		
+		
+		try {
+			con = ConnectionFactory.getConnection();
+			con.setAutoCommit(false);
+			
+			query = String.format(ProjectConstants.QUERY_INSERT_ADMIN_TRAINING_FEEDBACK,admin_id,student_id,training_code,category,feedback) ;
+			logger.info("query--->"+query);
+			stmt1 = con.createStatement();
+			uc = stmt1.executeUpdate(query);
+			if(uc >= 0){
+				con.commit();
+				status = true;
+			}else{
+				con.rollback();
+			}
+			
+		}catch(Exception e) {
+			e.printStackTrace();
+		}finally {
+			Utils.closeDB(stmt1,con);
+		}//end of finally
+		
+		
+		 
+		 logger.info("EXIT---> methodname : "+methodname);
+		return status;
+	}//end of updateAdminTrainingFeedback
+	/***********************************************************************************
+	 * This method checks the validity of a trainee
+	 * 
+	 * @param student_id
+	 * @param training_code
+	 * @return
+	 **********************************************************************************/
+	@Override
+	public boolean checkValidTrainee(int student_id, String training_code) {
+		String methodname = "checkValidTrainee" ;
+		logger.info("ENTRY---> methodname : "+methodname);
+		
+		Connection con = null;
+		Statement stmt = null;
+		ResultSet rs = null;
+		boolean status = false;
+		
+		//SELECT * FROM bitp_trainee_details where training_code = '%s' and user_id = %s
+		 
+		
+
+		
+		try {
+			String query = String.format(ProjectConstants.QUERY_IS_VALID_TRAINEE,training_code,student_id) ;
+			
+			logger.info("query--->"+query);
+			con = ConnectionFactory.getConnection();
+			stmt = con.createStatement();
+			rs = stmt.executeQuery(query);
+			
+			if(rs.next()){
+				status = true;
+			}
+		}catch(Exception e) {
+			e.printStackTrace();
+		}finally {
+			Utils.closeDB(rs,stmt,con);
+		}//end of finally
+		
+		
+		 
+		 logger.info("EXIT---> methodname : "+methodname);
+		return status;
+	}//end of checkValidTrainee
+	/*************************************************************************************
+	 * This method returns the reviews for the trainings
+	 * @param training_code
+	 * @return
+	 ************************************************************************************/
+	@Override
+	public List<TrainingReviewVO> getTrainingReviews(String training_code) {
+		String methodname = "getTrainingReviews";
+		logger.info("Entry--->"+this.getClass().getName()+" method---->"+methodname);
+		
+		logger.info("training_code --->"+training_code);
+		Connection con = null;
+		ResultSet rs = null;
+		Statement stmt = null;
+		
+		TrainingReviewVO objVO = null;
+		List<TrainingReviewVO> listReviews = new ArrayList<>();
+		
+		//select bu.name,bstf.feedback_category,bstf.feedback from 
+			//bitp_student_training_feedbacks bstf,bitp_user bu where bstf.student_id = bu.user_id and bstf.training_code = '%s'
+		
+		String query = "";
+		try {
+			query = String.format(ProjectConstants.QUERY_GET_TRAINING_REVIEWS,training_code);
+			logger.info("query--->"+query);
+			con = ConnectionFactory.getConnection();
+			stmt = con.createStatement();
+			rs = stmt.executeQuery(query);
+			while (rs.next()) {
+				objVO = new TrainingReviewVO();
+				objVO.setStudent_name(rs.getString(1));
+				objVO.setAttribute(rs.getString(2));
+				objVO.setValue(rs.getString(3));
+				
+				listReviews.add(objVO);
+				
+			}// end if
+			
+		}catch(Exception e) {
+			e.printStackTrace();
+		}finally {
+			Utils.closeDB(stmt,rs,con);
+		}//end of finally
+		logger.info("Exit--->"+this.getClass().getName()+" method---->"+methodname);
+		return listReviews;
+	}//end of fetchNotificationResults
 	
 	
 	

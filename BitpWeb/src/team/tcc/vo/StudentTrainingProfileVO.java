@@ -1,5 +1,7 @@
 package team.tcc.vo;
 
+import java.util.List;
+
 public class StudentTrainingProfileVO {
 	//bitp_user
 	private Integer user_id;
@@ -33,6 +35,35 @@ public class StudentTrainingProfileVO {
 	private String mth6_stipen_rcv;
 	private String project_submission_status;
 	private String issue_certificate_status;
+	
+	//new
+	private List<FeedbackVO> listFeedbacks;
+	private List<AdminFeedbackVO> listAdminFeedbacks;
+	
+	/**
+	 * @return the listAdminFeedbacks
+	 */
+	public List<AdminFeedbackVO> getListAdminFeedbacks() {
+		return listAdminFeedbacks;
+	}
+	/**
+	 * @param listAdminFeedbacks the listAdminFeedbacks to set
+	 */
+	public void setListAdminFeedbacks(List<AdminFeedbackVO> listAdminFeedbacks) {
+		this.listAdminFeedbacks = listAdminFeedbacks;
+	}
+	/**
+	 * @return the listFeedbacks
+	 */
+	public List<FeedbackVO> getListFeedbacks() {
+		return listFeedbacks;
+	}
+	/**
+	 * @param listFeedbacks the listFeedbacks to set
+	 */
+	public void setListFeedbacks(List<FeedbackVO> listFeedbacks) {
+		this.listFeedbacks = listFeedbacks;
+	}
 	/* (non-Javadoc)
 	 * @see java.lang.Object#toString()
 	 */

@@ -5,6 +5,7 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashMap;
 
+import org.json.JSONArray;
 import org.json.JSONObject;
 
 import com.google.gson.JsonElement;
@@ -184,9 +185,10 @@ public interface AppService extends Serializable{
 	 * @param feedback
 	 * @return
 	 * @author Amod
+	 * @param category 
 	 * @date 25032017
 	 ****************************************************************************/
-	boolean updateStudentTrainingFeedback(int user_id, String training_code, String month, String feedback);
+	boolean updateStudentTrainingFeedback(int user_id, String training_code, String month, String feedback, String category);
 	/*****************************************************************************
 	 * This method used to give the notification specific details when 
 	 * the notification is in processed state and one exam is associated
@@ -239,6 +241,52 @@ public interface AppService extends Serializable{
 	 * @return
 	 ********************************************************************************/
 	boolean submitProject(String training_code, int user_id);
+	/**********************************************************************************
+	 * This method checks the existence of a student feedback for a particular category
+	 * in a particular training in a particular month
+	 * @param user_id
+	 * @param training_code
+	 * @param month
+	 * @param category
+	 * @return
+	 *********************************************************************************/
+	boolean checkStudentFeedback(int user_id, String training_code, String month, String category);
+	/***********************************************************************************
+	 * This method checks whether admin has given a feedback for that particular student
+	 * of this category
+	 * 
+	 * @param student_id
+	 * @param training_code
+	 * @param category
+	 * @return
+	 **********************************************************************************/
+	boolean checkAdminFeedback(int student_id, String training_code, String category);
+	/***********************************************************************************
+	 * This method used to update feedback for a student by admin/Trainer/company
+	 * for the training
+	 * 
+	 * @param student_id
+	 * @param training_code
+	 * @param feedback
+	 * @param category
+	 * @param admin_id
+	 * @return
+	 **********************************************************************************/
+	boolean updateAdminTrainingFeedback(int student_id, String training_code, String feedback, String category, int admin_id);
+	/***********************************************************************************
+	 * This method checks the validity of a trainee
+	 * 
+	 * @param student_id
+	 * @param training_code
+	 * @return
+	 **********************************************************************************/
+	boolean checkValidTrainee(int student_id, String training_code); 
+	/*************************************************************************************
+	 * This method returns the reviews for the trainings
+	 * @param training_code
+	 * @return
+	 ************************************************************************************/
+	JSONArray getTrainingReviews(String training_code);
 	
 	
 	

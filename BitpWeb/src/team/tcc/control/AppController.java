@@ -181,12 +181,178 @@ public class AppController extends HttpServlet {
 			case ProjectConstants.ISSUE_CERTIFICATE:
 				issueCertificate(request, response);
 				break ;
+			case ProjectConstants.PUSH_ADMIN_FEEDBACK:
+				updateAdminTrainingFeedback(request, response);
+				break ;
+			case ProjectConstants.FETCH_TRAININGS_BY_COMPANY:
+				fetchTrainingsByCompany(request, response);
+				break ;
+			case ProjectConstants.FETCH_TRAINING_REVIEWS:
+				fetchTrainingReviews(request, response);
+				break ;
 			default:
 				return ;
 		}
 		
 		logger.info("EXIT---> methodname : "+methodname);
 	}//end doPost
+	/**************************************************************************
+	 * This method used to fetch reviews of a particular training
+	 * 
+	 * @param request
+	 * @param response
+	 * @throws IOException 
+	 *************************************************************************/
+	private void fetchTrainingReviews(HttpServletRequest request, HttpServletResponse response) throws IOException {
+		// mJObjReq.put("training_code", mTraining);
+		
+		String methodname = "fetchTrainingReviews";
+		logger.info("Entry--->" + this.getClass().getName() + " method---->" + methodname);
+		PrintWriter out = response.getWriter();
+		
+		JSONObject respObj = new JSONObject();
+		String training_code = "";
+		try {
+			respObj.put("status", "SUCCESS");
+			respObj.put("msg", "");
+			
+			JSONObject reqObj = new JSONObject(request.getParameter("data"));
+			training_code = !StringUtils.isEmpty(reqObj.getString("training_code"))?reqObj.getString("training_code"):"";
+			logger.info("requested training reviews for training code--->" + training_code);
+			
+			JSONArray jaReviews = appService.getTrainingReviews(training_code);
+			respObj.put("reviews", jaReviews);
+			
+			
+		} catch (Exception e) {
+			e.printStackTrace();
+			try {
+				respObj = new JSONObject();
+				respObj.put("status", "FAILURE");
+				respObj.put("msg", ProjectConstants.MSG_SERVER_ERROR);
+			} catch (Exception e2) {
+				e2.printStackTrace();
+			}
+		}
+		logger.info("Response ---->" + respObj.toString());
+		out.print(respObj);
+		logger.info("Exit--->" + this.getClass().getName() + " method---->" + methodname);
+	}// end of fetchTrainingReviews
+	/************************************************************************
+	 * This method gives the training by company code
+	 * @param request
+	 * @param response
+	 * @throws IOException 
+	 ***********************************************************************/
+	private void fetchTrainingsByCompany(HttpServletRequest request, HttpServletResponse response) throws IOException {
+		String methodname = "fetchTrainingsByCompany";
+		logger.info("Entry--->" + this.getClass().getName() + " method---->" + methodname);
+		PrintWriter out = response.getWriter();
+		
+		JSONObject respObj = new JSONObject();
+		try {
+			respObj.put("status", "SUCCESS");
+			respObj.put("msg", "");
+			
+			JSONObject reqObj = new JSONObject(request.getParameter("data"));
+			logger.debug("requested data --->"+reqObj.toString());
+			
+			String comp_code = !StringUtils.isEmpty(reqObj.getString("comp_code")) ? reqObj.getString("comp_code"): "";
+			JSONArray jaTrainings = commonService.getAvailableTrainingsByCompany(comp_code);
+			respObj.put("trainings", jaTrainings);
+			
+			
+		} catch (Exception e) {
+			e.printStackTrace();
+			try {
+				respObj = new JSONObject();
+				respObj.put("status", "FAILURE");
+				respObj.put("msg", ProjectConstants.MSG_SERVER_ERROR);
+			} catch (Exception e2) {
+				e2.printStackTrace();
+			}
+		}
+		logger.info("Response ---->" + respObj.toString());
+		out.print(respObj);
+		logger.info("Exit--->" + this.getClass().getName() + " method---->" + methodname);
+	}// end of fetchTrainingsByCompany
+	/***********************************************************************
+	 * This method used to give feedback by admin/company to a particular
+	 * student for its training
+	 * 
+	 * @param request
+	 * @param response
+	 * @throws IOException 
+	 **********************************************************************/
+	private void updateAdminTrainingFeedback(HttpServletRequest request, HttpServletResponse response) throws IOException {
+		String methodname = "updateAdminTrainingFeedback";
+		logger.info("Entry--->" + this.getClass().getName() + " method---->" + methodname);
+		PrintWriter out = response.getWriter();
+		
+		JSONObject respObj = new JSONObject();
+		try {
+			respObj.put("status", "FAILURE");
+			respObj.put("msg", "Sorry ! Failed to submit your feedback.");
+			
+			JSONObject reqObj = new JSONObject(request.getParameter("data"));
+			logger.debug("requested data --->"+reqObj.toString());
+			
+			
+            
+            
+			String feedback = !StringUtils.isEmpty(reqObj.getString("feedback")) ? reqObj.getString("feedback"): "";
+			String category = !StringUtils.isEmpty(reqObj.getString("category")) ? reqObj.getString("category"): "default";
+			String training_code = !StringUtils.isEmpty(reqObj.getString("training_code")) ? reqObj.getString("training_code"): "";
+			int admin_id = !StringUtils.isEmpty(reqObj.getString("admin_id")) ? Integer.parseInt(reqObj.getString("admin_id")): -1;
+			int student_id = !StringUtils.isEmpty(reqObj.getString("student_id")) ? Integer.parseInt(reqObj.getString("student_id")): -1;
+			
+			
+			if(student_id != -1 && admin_id != -1 && !StringUtils.isEmpty(training_code) && !StringUtils.isEmpty(feedback) && !StringUtils.isEmpty(category)){
+				//check valid trainee
+				boolean isValidTrainee = appService.checkValidTrainee(student_id,training_code);
+				if(isValidTrainee){
+					//check admin/company feedback existence for that category
+					boolean isFeedbackGiven = appService.checkAdminFeedback(student_id,training_code,category);
+					if(isFeedbackGiven){
+						respObj.put("status", "FAILURE");
+						respObj.put("msg", "Sorry ! You have previously submitted this feedback."); 
+					}else{
+						boolean status = appService.updateAdminTrainingFeedback(student_id,training_code,feedback,category,admin_id);
+						if(status){
+							respObj.put("status", "SUCCESS");
+							respObj.put("msg", "Your feedback submitted successfully.");					 
+						}else{
+							respObj.put("status", "FAILURE");
+							respObj.put("msg", "Sorry ! Failed to submit your feedback."); 
+						} 
+					}
+				}else{
+					respObj.put("status", "FAILURE");
+					respObj.put("msg", "Sorry ! Student not found for this training."); 
+				}
+				
+				
+			}else{
+				respObj.put("msg", "Invalid request.");
+			}
+			
+			
+			
+		} catch (Exception e) {
+			e.printStackTrace();
+			try {
+				respObj = new JSONObject();
+				respObj.put("status", "FAILURE");
+				respObj.put("msg", ProjectConstants.MSG_SERVER_ERROR);
+			} catch (Exception e2) {
+				e2.printStackTrace();
+			}
+		}
+		
+		logger.info("Response ---->" + respObj.toString());
+		out.print(respObj);
+		logger.info("Exit--->" + this.getClass().getName() + " method---->" + methodname);
+	}//end of updateStudentTrainingFeedback
 	/**********************************************************************
 	 * This method used to issue of a certificate to the 
 	 * user for an enrolled training by training code and
@@ -259,7 +425,7 @@ public class AppController extends HttpServlet {
 		JSONObject respObj = new JSONObject();
 		try {
 			respObj.put("status", "FAILURE");
-			respObj.put("msg", "Unable to process your application.");
+			respObj.put("msg", "Unable to process your project report.");
 			// 
 			
 			JSONObject reqObj = new JSONObject(request.getParameter("data"));
@@ -491,45 +657,46 @@ public class AppController extends HttpServlet {
 			JSONObject reqObj = new JSONObject(request.getParameter("data"));
 			logger.debug("requested data --->"+reqObj.toString());
 			String month = "" ;
-			String feedback = "";
-			
+			String feedback = !StringUtils.isEmpty(reqObj.getString("feedback")) ? reqObj.getString("feedback"): "";
+			String category = !StringUtils.isEmpty(reqObj.getString("category")) ? reqObj.getString("category"): "default";
 			String training_code = !StringUtils.isEmpty(reqObj.getString("training_code")) ? reqObj.getString("training_code"): "";
 			int user_id = !StringUtils.isEmpty(reqObj.getString("user_id")) ? Integer.parseInt(reqObj.getString("user_id")): -1;
 			if(reqObj.has("mth1_feedback")){
 				month = "mth1_feedback";
-				feedback = !StringUtils.isEmpty(reqObj.getString("mth1_feedback")) ? reqObj.getString("mth1_feedback"): "";
 			}
 			if(reqObj.has("mth2_feedback")){
 				month = "mth2_feedback";
-				feedback = !StringUtils.isEmpty(reqObj.getString("mth2_feedback")) ? reqObj.getString("mth2_feedback"): "";
 			}
 			if(reqObj.has("mth3_feedback")){
 				month = "mth3_feedback";
-				feedback = !StringUtils.isEmpty(reqObj.getString("mth3_feedback")) ? reqObj.getString("mth3_feedback"): "";
 			}
 			if(reqObj.has("mth4_feedback")){
 				month = "mth4_feedback";
-				feedback = !StringUtils.isEmpty(reqObj.getString("mth4_feedback")) ? reqObj.getString("mth4_feedback"): "";
 			}
 			if(reqObj.has("mth5_feedback")){
 				month = "mth5_feedback";
-				feedback = !StringUtils.isEmpty(reqObj.getString("mth5_feedback")) ? reqObj.getString("mth5_feedback"): "";
 			}
 			if(reqObj.has("mth6_feedback")){
 				month = "mth6_feedback";
-				feedback = !StringUtils.isEmpty(reqObj.getString("mth6_feedback")) ? reqObj.getString("mth6_feedback"): "";
 			}
 			
-			
 			if(user_id != -1 && !StringUtils.isEmpty(training_code) && !StringUtils.isEmpty(feedback) && !StringUtils.isEmpty(month)){
-				boolean status = appService.updateStudentTrainingFeedback(user_id,training_code,month,feedback);
-				if(status){
-					respObj.put("status", "SUCCESS");
-					respObj.put("msg", "Your feedback submitted successfully.");					 
-				}else{
+				//check student feedback existence for that category
+				boolean isFeedbackGiven = appService.checkStudentFeedback(user_id,training_code,month,category);
+				if(isFeedbackGiven){
 					respObj.put("status", "FAILURE");
-					respObj.put("msg", "Sorry ! Failed to submit your feedback."); 
-				} 
+					respObj.put("msg", "Sorry ! You have previously submitted this feedback."); 
+				}else{
+					boolean status = appService.updateStudentTrainingFeedback(user_id,training_code,month,feedback,category);
+					if(status){
+						respObj.put("status", "SUCCESS");
+						respObj.put("msg", "Your feedback submitted successfully.");					 
+					}else{
+						respObj.put("status", "FAILURE");
+						respObj.put("msg", "Sorry ! Failed to submit your feedback."); 
+					} 
+				}
+				
 			}else{
 				respObj.put("msg", "Invalid request.");
 			}

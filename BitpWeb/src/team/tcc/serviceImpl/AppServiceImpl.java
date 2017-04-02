@@ -3,13 +3,12 @@ package team.tcc.serviceImpl;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 
-import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
-
-import com.google.gson.Gson;
 
 import team.tcc.dao.AppDao;
 import team.tcc.daoImpl.AppDaoImpl;
@@ -19,6 +18,9 @@ import team.tcc.vo.NotificationResultVO;
 import team.tcc.vo.ProfileVO;
 import team.tcc.vo.StudentExamProfileVO;
 import team.tcc.vo.StudentTrainingProfileVO;
+import team.tcc.vo.TrainingReviewVO;
+
+import com.google.gson.Gson;
 /*************************************************************
  * @author 
  * Date : Mar, 17 2017
@@ -358,16 +360,17 @@ public class AppServiceImpl implements AppService {
 	 * @param training_code
 	 * @param month
 	 * @param feedback
+	 * @param category 
 	 * @return
 	 * @author Amod
 	 * @date 25032017
 	 ****************************************************************************/
 	@Override
-	public boolean updateStudentTrainingFeedback(int user_id, String training_code, String month, String feedback) {
+	public boolean updateStudentTrainingFeedback(int user_id, String training_code, String month, String feedback,String category) {
 		String methodname = "updateStudentTrainingFeedback" ;
 		logger.info("ENTRY---> methodname : "+methodname);
 		
-		boolean status = appDao.updateStudentTrainingFeedback(user_id,training_code,month,feedback);
+		boolean status = appDao.updateStudentTrainingFeedback(user_id,training_code,month,feedback,category);
 		
 		
 		logger.info("EXIT---> methodname : "+methodname);
@@ -472,4 +475,113 @@ public class AppServiceImpl implements AppService {
 		logger.info("EXIT---> methodname : "+methodname);
 		return status;
 	}//end of submitProject
+	/**********************************************************************************
+	 * This method checks the existence of a student feedback for a particular category
+	 * in a particular training in a particular month
+	 * @param user_id
+	 * @param training_code
+	 * @param month
+	 * @param category
+	 * @return
+	 *********************************************************************************/
+	@Override
+	public boolean checkStudentFeedback(int user_id, String training_code, String month, String category) {
+		String methodname = "checkStudentFeedback" ;
+		logger.info("ENTRY---> methodname : "+methodname);
+		
+		boolean status = appDao.checkStudentFeedback(user_id,training_code,month,category);
+		
+		
+		logger.info("EXIT---> methodname : "+methodname);
+		return status;
+	}//end of checkStudentFeedback
+
+	/***********************************************************************************
+	 * This method checks whether admin has given a feedback for that particular student
+	 * of this category
+	 * 
+	 * @param student_id
+	 * @param training_code
+	 * @param category
+	 * @return
+	 **********************************************************************************/
+	@Override
+	public boolean checkAdminFeedback(int student_id, String training_code, String category) {
+		String methodname = "checkAdminFeedback" ;
+		logger.info("ENTRY---> methodname : "+methodname);
+		
+		boolean status = appDao.checkAdminFeedback(student_id,training_code,category);
+		
+		
+		logger.info("EXIT---> methodname : "+methodname);
+		return status;
+	}//end of checkAdminFeedback
+	/***********************************************************************************
+	 * This method used to update feedback for a student by admin/Trainer/company
+	 * for the training
+	 * 
+	 * @param student_id
+	 * @param training_code
+	 * @param feedback
+	 * @param category
+	 * @param admin_id
+	 * @return
+	 **********************************************************************************/
+	@Override
+	public boolean updateAdminTrainingFeedback(int student_id, String training_code, String feedback, String category, int admin_id) {
+		String methodname = "updateAdminTrainingFeedback" ;
+		logger.info("ENTRY---> methodname : "+methodname);
+		
+		boolean status = appDao.updateAdminTrainingFeedback(student_id,training_code,feedback,category,admin_id);
+		
+		
+		logger.info("EXIT---> methodname : "+methodname);
+		return status;
+	}//end of updateAdminTrainingFeedback
+	/***********************************************************************************
+	 * This method checks the validity of a trainee
+	 * 
+	 * @param student_id
+	 * @param training_code
+	 * @return
+	 **********************************************************************************/
+	@Override
+	public boolean checkValidTrainee(int student_id, String training_code) {
+		String methodname = "checkValidTrainee" ;
+		logger.info("ENTRY---> methodname : "+methodname);
+		
+		boolean status = appDao.checkValidTrainee(student_id,training_code);
+		
+		
+		logger.info("EXIT---> methodname : "+methodname);
+		return status;
+	}//end of checkValidTrainee
+	/*************************************************************************************
+	 * This method returns the reviews for the trainings
+	 * @param training_code
+	 * @return
+	 ************************************************************************************/
+	@Override
+	public JSONArray getTrainingReviews(String training_code) {
+		String methodname = "getTrainingReviews";
+		logger.info("Entry--->"+this.getClass().getName()+" method---->"+methodname);
+		
+		JSONArray jArr = new JSONArray();
+		
+		List<TrainingReviewVO> listReview = appDao.getTrainingReviews(training_code);
+		if(null != listReview && listReview.size() > 0){
+			
+			try {
+				jArr = new JSONArray(new Gson().toJson(listReview));
+			} catch (JSONException e) {
+				e.printStackTrace();
+			}
+		}else{
+			logger.info("No reviews found for this training!!!");
+		}
+		
+		
+		logger.info("Exit--->"+this.getClass().getName()+" method---->"+methodname);
+		return jArr;
+	}//end of getTrainingReviews
 }//end class

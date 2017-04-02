@@ -158,4 +158,24 @@ public class CommonServiceImpl implements CommonService {
 		logger.info("EXIT---> methodname : "+methodname);
 		return jaExams;
 	}//end of getAvailableTraining
+	/********************************************************************
+	 * This method gives the available trainings for a company
+	 * @param comp_code
+	 * @return
+	 *******************************************************************/
+	@Override
+	public JSONArray getAvailableTrainingsByCompany(String comp_code) {
+		String methodname = "getAvailableTrainingsByCompany" ;
+		logger.info("ENTRY---> methodname : "+methodname);
+		
+		JSONArray jaExams = new JSONArray();
+		List<TrainingVO> alTraining = commonDao.getAvailableTrainingsByCompany(comp_code);
+		try {
+			jaExams = new JSONArray(new Gson().toJson(alTraining));
+		} catch (JSONException e) {
+			e.printStackTrace();
+		}
+		logger.info("EXIT---> methodname : "+methodname);
+		return jaExams;
+	}//end of getAvailableTrainingsByCompany
 }//end class
